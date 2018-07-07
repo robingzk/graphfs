@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use rocket::response::content;
 use rocket::State;
 
-use clap::{App, Arg};
+use clap::{App, Arg, ArgMatches};
 
 use graphfs::model::{Context, Schema};
 
@@ -52,7 +52,7 @@ fn rocket(root_path: PathBuf) -> rocket::Rocket {
 }
 
 /// Read the command line arguments.
-fn get_matches() -> App {
+fn get_matches<'a>() -> ArgMatches<'a> {
     App::new("graphfs")
         .version("1.0")
         .about("Access a directory as a GraphQL endpoint")
