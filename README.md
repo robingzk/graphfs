@@ -5,12 +5,12 @@ Graphfs is written in **Rust** using **Rocket** as a web server and **Juniper**
 as a GraphQL library. It is available as a binary that can be directly used,
 and as a Rust library.
 
-### Binary usage
+## Binary usage
 ```bash
 ./graphfs [path]
 ```
 
-### Example queries
+## Example queries
 Get all the entries in the root folder, and show the content of the files:
 ```graphql
 query {

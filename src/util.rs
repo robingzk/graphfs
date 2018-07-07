@@ -2,17 +2,49 @@ use relative_path::RelativePath;
 use std::fs::canonicalize;
 use std::path::PathBuf;
 
-/// Resolve the path of a file given its location relative to a root path.
+/// Resolve the path of a file given its location relative to a root path, and
+/// verify that the path is contained within the root directory.
+///
+pub fn from_virtual_path(root: &PathBuf, rel_path: &str) -> Option<PathBuf> {
+    let path = RelativePath::new(rel_path).to_path(root);
+    if is_path_contained(&root, &path) {
+        Some(path)
+    } else {
+        None
+    }
+}
+
+/// Check if `root` contains the path `other`, potentially into one of its
+/// sub-folders.
 ///
 /// # Example
 /// ```
 /// let root = std::path::PathBuf::from("/home");
-/// let result = graphfs::util::from_virtual_path(&root, "/hello.txt").unwrap();
-/// assert_eq!(result.to_str(), Some("/home/hello.txt"));
+/// let other = std::path::PathBuf::from("/lol");
+/// assert_eq!(graphfs::util::is_path_contained(&root, &other), false);
 /// ```
 ///
-pub fn from_virtual_path(root: &PathBuf, rel_path: &str) -> Option<PathBuf> {
-    Some(RelativePath::new(rel_path).to_path(root))
+///
+pub fn is_path_contained(root: &PathBuf, other: &PathBuf) -> bool {
+    match (canonicalize(root), canonicalize(other)) {
+        (Ok(root), Ok(path)) => {
+            let mut root_components = root.components();
+            let mut path_components = path.components();
+            loop {
+                match (root_components.next(), path_components.next()) {
+                    (None, None) | (None, Some(_)) => break,
+                    (Some(x), Some(y)) => {
+                        if x != y {
+                            return false;
+                        }
+                    },
+                    (Some(_), None) => return false
+                }
+            }
+            true
+        },
+        _ => false
+    }
 }
 
 /// Resolve the virtual location of a path relative to a root folder.
@@ -37,8 +69,7 @@ pub fn to_virtual_path(root: &PathBuf, path: &PathBuf) -> Option<String> {
     // Remove the root path from `path_components`
     loop {
         match (root_components.next(), path_components.peek()) {
-            (None, None) => break,
-            (None, Some(_)) => break,
+            (None, None) | (None, Some(_)) => break,
             (Some(x), Some(y)) => {
                 if x != *y {
                     return None;
