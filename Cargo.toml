@@ -1,0 +1,19 @@
+[package]
+name = "graphfs"
+version = "0.1.0"
+authors = ["robingzk <robin.guzniczak@gmail.com>"]
+
+[lib]
+name = "graphfs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "graphfs-server"
+path = "src/bin/main.rs"
+
+[dependencies]
+juniper = "0.9.0"
+juniper_rocket = "0.1.2"
+rocket = "0.3.14"
+rocket_codegen = "0.3.14"
+relative-path = "0.3.7"
