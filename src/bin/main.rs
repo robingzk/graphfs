@@ -2,6 +2,7 @@
 #![feature(custom_attribute)]
 #![plugin(rocket_codegen)]
 
+extern crate clap;
 extern crate graphfs;
 extern crate juniper;
 extern crate juniper_rocket;
@@ -11,6 +12,8 @@ use std::path::PathBuf;
 
 use rocket::response::content;
 use rocket::State;
+
+use clap::{App, Arg};
 
 use graphfs::model::{Context, Schema};
 
@@ -37,19 +40,10 @@ fn post_graphql_handler(
     request.execute(&schema, &context)
 }
 
-//
-// Return the root path. Currently use the current directory
-// but should be changed later.
-//
-fn root_path() -> PathBuf {
-    let mut path = PathBuf::new();
-    path.push("./src");
-    path
-}
-
-fn rocket() -> rocket::Rocket {
+/// Create the rocket app.
+fn rocket(root_path: PathBuf) -> rocket::Rocket {
     rocket::ignite()
-        .manage(graphfs::context(root_path()))
+        .manage(graphfs::context(root_path))
         .manage(graphfs::schema())
         .mount(
             "/",
@@ -57,6 +51,18 @@ fn rocket() -> rocket::Rocket {
         )
 }
 
+/// Read the command line arguments.
+fn get_matches() -> App {
+    App::new("graphfs")
+        .version("1.0")
+        .about("Access a directory as a GraphQL endpoint")
+        .arg(Arg::with_name("root").help("Path to the directory used as root"))
+        .get_matches()
+}
+
 fn main() {
-    rocket().launch();
+    let matches = get_matches();
+    let root = matches.value_of("root").unwrap_or("./");
+    println!("Serving directory {}", root);
+    rocket(PathBuf::from(root)).launch();
 }
